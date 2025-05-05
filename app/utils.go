@@ -3,6 +3,8 @@ package main
 import (
 	"bytes"
 	"compress/zlib"
+	"crypto/sha1"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"os"
@@ -33,6 +35,7 @@ func readFile(fileHash string, decompress bool) ([]byte, error) {
 	return decompressedData, nil
 }
 
+// Decompresses data using zlib.
 func decompressData(data []byte) ([]byte, error) {
 	// Decompress the data using zlib
 	reader, err := zlib.NewReader(bytes.NewReader(data))
@@ -49,6 +52,29 @@ func decompressData(data []byte) ([]byte, error) {
 	return decompressedData, nil
 }
 
+func compressData(data []byte) ([]byte, error) {
+	var buf bytes.Buffer
+
+	writer := zlib.NewWriter(&buf)
+	defer writer.Close()
+
+	if _, err := writer.Write(data); err != nil {
+		return nil, fmt.Errorf("error writing compressed data: %w", err)
+	}
+
+	return buf.Bytes(), nil
+}
+
+func getSHA1Hash(data []byte) (string, error) {
+	sha := sha1.New()
+	if _, err := sha.Write(data); err != nil {
+		return "", fmt.Errorf("error writing data to SHA1 hash: %w", err)
+	}
+
+	hashBytes := sha.Sum(nil)
+	return hex.EncodeToString(hashBytes), nil
+}
+
 // readUntilNullByte reads data from a byte slice until it encounters a null byte (0).
 // The first byte slice returned contains the data read until the null byte,
 // and the second byte slice contains the remaining data after the null byte.
@@ -57,7 +83,6 @@ func readUntilNullByte(data []byte) ([]byte, []byte, error) {
 	fndNull := false
 	idx := 0
 
-	// 5 null
 	for _, b := range data {
 		if b == 0 {
 			fndNull = true
@@ -73,4 +98,29 @@ func readUntilNullByte(data []byte) ([]byte, []byte, error) {
 
 	leftData := data[idx+1:] // idx still points to the null byte
 	return res, leftData, nil
+}
+
+// writeFile writes data to a file in the .git/objects directory.
+// The file is named using the provided hash, which should be 40 characters long.
+func writeFile(hash string, data []byte) error {
+	if len(hash) != 40 {
+		return fmt.Errorf("invalid hash length")
+	}
+
+	parentDir := fmt.Sprintf(".git/objects/%s", hash[:2])
+	if err := os.MkdirAll(parentDir, 0777); err != nil {
+		return fmt.Errorf("error creating directory: %w", err)
+	}
+
+	filePath := fmt.Sprintf("%s/%s", parentDir, hash[2:])
+	file, err := os.Create(filePath)
+	if err != nil {
+		return fmt.Errorf("error creating file: %w", err)
+	}
+	defer file.Close()
+	if _, err := file.Write(data); err != nil {
+		return fmt.Errorf("error writing data to file: %w", err)
+	}
+
+	return nil
 }

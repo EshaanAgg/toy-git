@@ -33,6 +33,14 @@ func main() {
 		hash := os.Args[3]
 		catFileHandler(hash)
 
+	case "hash-object":
+		if len(os.Args) != 4 || os.Args[2] != "-w" {
+			fmt.Fprintf(os.Stderr, "usage: mygit hash-object -w <file>\n")
+			os.Exit(1)
+		}
+		filePath := os.Args[3]
+		hashObjectHandler(filePath)
+
 	default:
 		fmt.Fprintf(os.Stderr, "Unknown command %s\n", command)
 		os.Exit(1)
