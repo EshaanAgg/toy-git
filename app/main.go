@@ -55,6 +55,14 @@ func main() {
 		treeHash := os.Args[3]
 		lsTreeNameOnlyHandler(treeHash)
 
+	case "write-tree":
+		tree, err := NewTreeFromFolder(".")
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error creating tree: %s\n", err)
+			os.Exit(1)
+		}
+		fmt.Print(tree.Hash)
+
 	default:
 		fmt.Fprintf(os.Stderr, "Unknown command %s\n", command)
 		os.Exit(1)
