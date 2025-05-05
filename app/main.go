@@ -41,6 +41,14 @@ func main() {
 		filePath := os.Args[3]
 		hashObjectHandler(filePath)
 
+	case "ls-tree":
+		if len(os.Args) != 4 || os.Args[2] != "--name-only" {
+			fmt.Fprintf(os.Stderr, "usage: mygit ls-tree --name-only <tree-sha>\n")
+			os.Exit(1)
+		}
+		treeHash := os.Args[3]
+		lsTreeNameOnlyHandler(treeHash)
+
 	default:
 		fmt.Fprintf(os.Stderr, "Unknown command %s\n", command)
 		os.Exit(1)
