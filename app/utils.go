@@ -53,16 +53,20 @@ func decompressData(data []byte) ([]byte, error) {
 }
 
 func compressData(data []byte) ([]byte, error) {
-	var buf bytes.Buffer
+	var compressedData bytes.Buffer
+	compressor := zlib.NewWriter(&compressedData)
 
-	writer := zlib.NewWriter(&buf)
-	defer writer.Close()
-
-	if _, err := writer.Write(data); err != nil {
-		return nil, fmt.Errorf("error writing compressed data: %w", err)
+	_, err := compressor.Write(data)
+	if err != nil {
+		return nil, fmt.Errorf("error writing data to zlib writer: %w", err)
 	}
 
-	return buf.Bytes(), nil
+	err = compressor.Close()
+	if err != nil {
+		return nil, fmt.Errorf("error closing zlib writer: %w", err)
+	}
+
+	return compressedData.Bytes(), nil
 }
 
 func getSHA1Hash(data []byte) (string, error) {
