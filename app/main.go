@@ -42,7 +42,13 @@ func main() {
 		hashObjectHandler(filePath)
 
 	case "ls-tree":
-		if len(os.Args) != 4 || os.Args[2] != "--name-only" {
+		if (len(os.Args)) == 3 {
+			treeHash := os.Args[2]
+			lsTreeHandler(treeHash)
+			return
+		}
+
+		if len(os.Args) == 4 && os.Args[2] != "--name-only" {
 			fmt.Fprintf(os.Stderr, "usage: mygit ls-tree --name-only <tree-sha>\n")
 			os.Exit(1)
 		}

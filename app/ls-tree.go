@@ -18,6 +18,25 @@ type TreeFileEntry struct {
 	HashBytes []byte
 }
 
+func (entry *TreeFileEntry) GetHexHash() string {
+	return fmt.Sprintf("%x", entry.HashBytes)
+}
+
+func (entry *TreeFileEntry) GetType() string {
+	hash := entry.GetHexHash()
+	fileContent, err := readFile(hash, true)
+	if err != nil {
+		fmt.Println("Error reading file:", err)
+		return "unknown"
+	}
+	if len(fileContent) < 5 {
+		fmt.Println("File content too short")
+		return "unknown"
+	}
+
+	return string(fileContent[:4])
+}
+
 // Parses one line of the tree file entry.
 // The format is: "<mode> <name>\0<hash_bytes>"
 func readTreeFileEntry(data []byte) (*TreeFileEntry, []byte, error) {
@@ -99,5 +118,17 @@ func lsTreeNameOnlyHandler(hash string) {
 
 	for _, entry := range tree.Entries {
 		fmt.Println(entry.Name)
+	}
+}
+
+func lsTreeHandler(hash string) {
+	tree, err := NewTree(hash)
+	if err != nil {
+		fmt.Printf("Error reading tree: %s\n", err)
+		return
+	}
+
+	for _, entry := range tree.Entries {
+		fmt.Printf("%s\t%s\t%s\t%s\n", entry.Mode, entry.GetType(), entry.GetHexHash(), entry.Name)
 	}
 }
