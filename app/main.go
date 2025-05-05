@@ -26,6 +26,13 @@ func main() {
 
 		fmt.Println("Initialized git directory")
 
+	case "cat-file":
+		if len(os.Args) < 4 || os.Args[2] != "-p" {
+			fmt.Fprintf(os.Stderr, "usage: mygit cat-file -p <object>\n")
+		}
+		hash := os.Args[3]
+		catFileHandler(hash)
+
 	default:
 		fmt.Fprintf(os.Stderr, "Unknown command %s\n", command)
 		os.Exit(1)
