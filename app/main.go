@@ -7,35 +7,24 @@ import (
 
 func main() {
 	if len(os.Args) < 2 {
-		fmt.Fprintf(os.Stderr, "usage: mygit <command> [<args>...]\n")
+		fmt.Fprintf(os.Stderr, "usage: git <command> [<args>...]\n")
 		os.Exit(1)
 	}
 
 	switch command := os.Args[1]; command {
 	case "init":
-		for _, dir := range []string{".git", ".git/objects", ".git/refs"} {
-			if err := os.MkdirAll(dir, 0755); err != nil {
-				fmt.Fprintf(os.Stderr, "Error creating directory: %s\n", err)
-			}
-		}
-
-		headFileContents := []byte("ref: refs/heads/main\n")
-		if err := os.WriteFile(".git/HEAD", headFileContents, 0644); err != nil {
-			fmt.Fprintf(os.Stderr, "Error writing file: %s\n", err)
-		}
-
-		fmt.Println("Initialized git directory")
+		initHandler()
 
 	case "cat-file":
 		if len(os.Args) < 4 || os.Args[2] != "-p" {
-			fmt.Fprintf(os.Stderr, "usage: mygit cat-file -p <object>\n")
+			fmt.Fprintf(os.Stderr, "usage: git cat-file -p <object>\n")
 		}
 		hash := os.Args[3]
 		catFileHandler(hash)
 
 	case "hash-object":
 		if len(os.Args) != 4 || os.Args[2] != "-w" {
-			fmt.Fprintf(os.Stderr, "usage: mygit hash-object -w <file>\n")
+			fmt.Fprintf(os.Stderr, "usage: git hash-object -w <file>\n")
 			os.Exit(1)
 		}
 		filePath := os.Args[3]
@@ -49,19 +38,14 @@ func main() {
 		}
 
 		if len(os.Args) == 4 && os.Args[2] != "--name-only" {
-			fmt.Fprintf(os.Stderr, "usage: mygit ls-tree --name-only <tree-sha>\n")
+			fmt.Fprintf(os.Stderr, "usage: git ls-tree --name-only <tree-sha>\n")
 			os.Exit(1)
 		}
 		treeHash := os.Args[3]
 		lsTreeNameOnlyHandler(treeHash)
 
 	case "write-tree":
-		tree, err := NewTreeFromFolder(".")
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error creating tree: %s\n", err)
-			os.Exit(1)
-		}
-		fmt.Print(tree.Hash)
+		writeTreeHandler()
 
 	default:
 		fmt.Fprintf(os.Stderr, "Unknown command %s\n", command)
