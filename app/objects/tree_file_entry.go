@@ -75,17 +75,3 @@ func readTreeFileEntry(data []byte) (*TreeFileEntry, []byte, error) {
 		HashBytes: hashBytes,
 	}, dataBytes[20:], nil
 }
-
-// Returns the disk bytes of the tree object.
-// Also updates the ContentLength field with the length of the content.
-func (tree *Tree) GetDiskBytes() []byte {
-	content := make([]byte, 0)
-	for _, entry := range tree.Entries {
-		content = append(content, entry.GetDiskBytes()...)
-	}
-	tree.ContentLength = len(content)
-
-	res := []byte(fmt.Sprintf("tree %d\x00", len(content)))
-	res = append(res, content...)
-	return res
-}

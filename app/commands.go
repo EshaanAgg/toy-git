@@ -3,8 +3,10 @@ package main
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/codecrafters-io/git-starter-go/app/objects"
+	"github.com/codecrafters-io/git-starter-go/app/utils"
 )
 
 func catFileHandler(hash string) {
@@ -77,4 +79,27 @@ func writeTreeHandler() {
 		os.Exit(1)
 	}
 	fmt.Print(tree.Hash)
+}
+
+func commitTreeHandler(treeSHA string, parentSHA string, message string) {
+	defaultCommitter := objects.Person{
+		Name:         "EshaanAgg",
+		Email:        "test@domain.com",
+		DateSeconds:  time.Now().Unix(),
+		DateTimeZone: "+0530",
+	}
+
+	commit := &objects.Commit{
+		TreeSHA:       utils.GetBytes(treeSHA),
+		ParentSHA:     [][]byte{utils.GetBytes(parentSHA)},
+		Author:        defaultCommitter,
+		Committer:     defaultCommitter,
+		CommitMessage: message,
+	}
+	err := commit.WriteToDisk()
+	if err != nil {
+		fmt.Printf("Error writing commit to disk: %s\n", err)
+		return
+	}
+	fmt.Print(commit.Hash)
 }

@@ -1,7 +1,6 @@
 package objects
 
 import (
-	"encoding/hex"
 	"fmt"
 	"os"
 
@@ -16,14 +15,6 @@ type Blob struct {
 	ContentLength int
 }
 
-// Encodes the content into the format for a git blob object.
-// Format: "blob <length>\0<content>"
-func (b *Blob) getBlobDiskContent() []byte {
-	res := fmt.Appendf(nil, "blob %d\x00", b.ContentLength)
-	res = append(res, b.Content...)
-	return res
-}
-
 // NewBlob reads a file from the given path and creates a Blob object.
 func NewBlob(filePath string) (*Blob, error) {
 	data, err := os.ReadFile(filePath)
@@ -36,11 +27,10 @@ func NewBlob(filePath string) (*Blob, error) {
 		ContentLength: len(data),
 	}
 
-	hash, err := utils.GetSHA1Hash(b.getBlobDiskContent())
+	err = b.WriteToDisk()
 	if err != nil {
-		return nil, fmt.Errorf("error getting hash: %w", err)
+		return nil, fmt.Errorf("error writing blob to disk: %w", err)
 	}
-	b.Hash = hash
 
 	return b, nil
 }
@@ -67,21 +57,14 @@ func NewBlobFromHashFile(hash string) (*Blob, error) {
 }
 
 func (b *Blob) WriteToDisk() error {
-	compressedData, err := utils.CompressData(b.getBlobDiskContent())
+	hash, err := utils.CreateObjectOnDisk("blob", b.Content)
 	if err != nil {
-		return fmt.Errorf("error compressing data: %w", err)
+		return fmt.Errorf("error writing blob to disk: %w", err)
 	}
-	if err := utils.WriteFile(b.Hash, compressedData); err != nil {
-		return fmt.Errorf("error writing file: %w", err)
-	}
+	b.Hash = hash
 	return nil
 }
 
 func (b *Blob) GetHashBytes() []byte {
-	data, err := hex.DecodeString(b.Hash)
-	if err != nil {
-		fmt.Println("Error decoding hash:", err)
-		return nil
-	}
-	return data
+	return utils.GetBytes(b.Hash)
 }

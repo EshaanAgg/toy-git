@@ -1,7 +1,6 @@
 package objects
 
 import (
-	"encoding/hex"
 	"fmt"
 	"os"
 
@@ -17,15 +16,6 @@ type Tree struct {
 
 	// Represents the length of the content in bytes.
 	ContentLength int
-}
-
-func (tree *Tree) GetHashBytes() []byte {
-	data, err := hex.DecodeString(tree.Hash)
-	if err != nil {
-		fmt.Println("Error decoding hash:", err)
-		return nil
-	}
-	return data
 }
 
 // Creates a new tree object from the given file hash.
@@ -107,19 +97,28 @@ func NewTreeFromFolder(folder string) (*Tree, error) {
 
 	tree := &Tree{Entries: entries}
 	diskBytes := tree.GetDiskBytes()
-	hash, err := utils.GetSHA1Hash(diskBytes)
+	hash, err := utils.CreateObjectOnDisk("tree", diskBytes)
 	if err != nil {
-		return nil, fmt.Errorf("error getting hash: %w", err)
+		return nil, fmt.Errorf("error creating object on disk: %w", err)
 	}
 	tree.Hash = hash
 
-	compressedData, err := utils.CompressData(diskBytes)
-	if err != nil {
-		return nil, fmt.Errorf("error compressing data: %w", err)
-	}
-	if err := utils.WriteFile(tree.Hash, compressedData); err != nil {
-		return nil, fmt.Errorf("error writing file: %w", err)
-	}
-
 	return tree, nil
+}
+
+// Returns the disk bytes of the tree object.
+// It only contains the "content" of the object, not including the header.
+// Also updates the ContentLength field with the length of the content.
+func (tree *Tree) GetDiskBytes() []byte {
+	content := make([]byte, 0)
+	for _, entry := range tree.Entries {
+		content = append(content, entry.GetDiskBytes()...)
+	}
+	tree.ContentLength = len(content)
+
+	return content
+}
+
+func (tree *Tree) GetHashBytes() []byte {
+	return utils.GetBytes(tree.Hash)
 }
