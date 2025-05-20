@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/codecrafters-io/git-starter-go/app/objects"
-	"github.com/codecrafters-io/git-starter-go/app/utils"
 )
 
 func catFileHandler(hash string) {
@@ -90,8 +89,8 @@ func commitTreeHandler(treeSHA string, parentSHA string, message string) {
 	}
 
 	commit := &objects.Commit{
-		TreeSHA:       utils.GetBytes(treeSHA),
-		ParentSHA:     [][]byte{utils.GetBytes(parentSHA)},
+		TreeSHA:       treeSHA,
+		ParentSHA:     []string{parentSHA},
 		Author:        defaultCommitter,
 		Committer:     defaultCommitter,
 		CommitMessage: message,

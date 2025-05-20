@@ -24,8 +24,8 @@ type Commit struct {
 	Hash string
 
 	// Content
-	TreeSHA       []byte
-	ParentSHA     [][]byte
+	TreeSHA       string
+	ParentSHA     []string
 	Author        Person
 	Committer     Person
 	CommitMessage string
@@ -38,23 +38,24 @@ func (c *Commit) GetDiskBytes() []byte {
 
 	// tree {treeSHA}
 	buf.WriteString("tree ")
-	buf.Write(c.TreeSHA)
+	buf.WriteString(c.TreeSHA)
 	buf.WriteByte('\n')
 
 	// parent {parentSHA}
 	for _, parent := range c.ParentSHA {
 		buf.WriteString("parent ")
-		buf.Write(parent)
+		buf.WriteString(parent)
+		buf.WriteByte('\n')
 	}
-	buf.WriteByte('\n')
 
 	// author and committer
 	c.Author.WriteTo("author", &buf)
 	c.Committer.WriteTo("committer", &buf)
 
 	// Commit message
-	buf.WriteString("\n")
+	buf.WriteByte('\n')
 	buf.WriteString(c.CommitMessage)
+	buf.WriteByte('\n')
 
 	return buf.Bytes()
 }
